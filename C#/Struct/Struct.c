@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     for (int i = 1; i < count; ++i){
     	printf("\t%s, who has %d burth, works in %d department and his salary is %d \n",
-    		st[i]->surname, st[i]->burth, st[1]->numberofdepartment, st[1]->salary);
+    		st[i]->surname, st[i]->burth, st[i]->numberofdepartment, st[i]->salary);
 	}
 
     for (int i = 0; i < count; i++)

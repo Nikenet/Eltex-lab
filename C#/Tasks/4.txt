@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
 }
 //---------------
 +===============+
-$ gcc -Wall -o argv argv.c -std=c99
+$ gcc -Wall -o argv argv.c -std=c99`````
 $ ./argv 10abc
 argv[0]=./argv
 argv[1]=10
