@@ -8,7 +8,7 @@ TARGET=main
 LIBRARY=count
 
 $(TARGET): $(TARGET).o $(LIBRARY).a
-	$(CC) -o $(TARGET) $(TARGET).o -L. -lcount
+	$(CC) -o $(TARGET) $(TARGET).o -L. -l$(LIBRARY)
 
 $(TARGET).o: $(TARGET).c
 	$(CC) $(CFLAG) $(TARGET).c
@@ -20,4 +20,4 @@ $(LIBRARY).o: $(LIBRARY).c
 	$(CC) $(CFLAG) $(LIBRARY).c
 
 clean:
-	rm -rf *.o *.a binary
+	rm -rf *.o *.a $(TARGET)
