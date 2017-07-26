@@ -10,58 +10,79 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-void vinney(int all_food, int vi_eat, int vi_delay){
-	int t = all_food - vi_eat;
-	sleep(vi_delay);
-	return t;
+int writefile(int ch){
+	FILE *file;
+	file = fopen("tmp.txt", "r+");
+	fputc(ch, file);
+	fclose(file);
+	return 0;
 }
 
-void bee(){}
-
-void parent(int pid, int status){
-	printf("PARENT: Это процесс-родитель!\n");
-	printf("PARENT: Мой PID -- %d\n", getpid());
-	printf("PARENT: PID моего потомка %d\n",pid);
-	printf("PARENT: Я жду, пока потомок не вызовет exit()...\n");
-	if (wait(&status) == -1){
-		perror("wait() error");
-	} else if (WIFEXITED(status)){
-		printf("PARENT: Код возврата потомка: %d\n", status/256);
-		
-	} else {
-		perror("PARENT: потомок не завершился успешно");
-	}
-	printf("PARENT: Выход!\n");
+int readfile(int ch){
+	FILE *file;
+	file = fopen("tmp.txt", "r");
+	ch = fgetc(file);
+	fclose(file);
+	return ch;
 }
 
-void child(int pid, int status){
-	printf(" CHILD: Это процесс-потомок!\n");
-	printf(" CHILD: Мой PID -- %d\n", getpid());
-	printf(" CHILD: PID моего родителя -- %d\n", getppid());
-	printf(" CHILD: Введите мой код возврата (как можно меньше):");
-	scanf("%d", &status);
-	printf(" CHILD: Выход!\n");
-	exit(status);
-}
-	
 int main(int argc, char** argv) {
-
-	int all_food, vi_eat, vi_delay;
-	pid_t pid;
-	int status;
-
-	printf("Введите сколько и как часто Винни ест: \n");
-	scanf("%d %d ", vi_eat, vi_delay);
-
 	
-	pid = fork();
+	pid_t pid;
+	int i, videlay, vieat,ch=64, food;
+	
+	writefile(ch);
+	food = ch;
 
-	if (-1 == pid) {
-		perror("fork"); /* произошла ошибка */
-		exit(1); /*выход из родительского процесса*/
-	} else if (0 == pid){
-		child(pid, status);
-	} else {
-		parent(pid, status);
+	printf("Vinne eats every:\n");
+	scanf("%d", &videlay);
+	printf("How many Vinne eats?:\n");
+	scanf("%d", &vieat);
+
+	for (i = 0; i < food; i++) {				
+		pid = fork();			
+
+		if (pid == -1) {
+			printf("ERROR, pid == -1\n");
+			return 0;
+		}
+
+		if (pid == 0) {
+
+			if (i == 0){
+				food = readfile(ch);
+				while(food > 0){
+					food = readfile(ch);
+					ch = food - vieat;
+					writefile(ch);
+					printf("I'm Vinne and i'm eating, food is %d\n", food);
+					sleep(videlay);
+
+					if (food < vieat){
+						printf("Vinne RIP\n");
+						return 0;
+					}										
+				}				
+			}
+							
+			srand (getpid());
+			int random = rand() % 15+1;
+			sleep(random);
+
+			food = readfile(ch);
+			ch = food +1;
+			writefile(ch);
+
+			if (food < vieat){
+					printf("Vinne RIP\n");
+					return 0;
+				}
+
+			printf("I'm bee, i'm sleeping %d, my number %d, food is %d\n", random, i, food);
+			return 0;
+			
+		}
 	}
+
+	return 0;
 }

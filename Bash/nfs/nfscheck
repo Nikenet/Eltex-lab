@@ -1,0 +1,20 @@
+#!/bin/bash
+
+ip=127.0.0.1
+echo "Вы запустили чеккер примонтированных директорий, $ip"
+
+status=$(mount | grep $ip)
+if (( ${#status} == 0 )); then
+	sudo mount -t nfs -O iocharset=utf-8 $ip:/home/nikenet/nfs /home/nikenet/Общедоступные/
+	echo "Монтирование директории в /home/nikenet/Общедоступные/"
+	status=$(mount | grep $ip)
+fi
+
+if (( ${#status} != 0 )); then
+	
+	time=$(date +%T)
+	touch /home/nikenet/Общедоступные/$time
+	echo "Директория примонтированна в /home/nikenet/Общедоступные/"
+	echo "В /home/nikenet/Общедоступные/ создан файл с текущей датой"
+fi
+

@@ -10,7 +10,7 @@ echo ""
 
 rm -rf /tmp/pacagelist.txt
 rm -rf /tmp/needtofirewall.txt
-rm -rf firewall.conf
+
 
 apt list | grep установ | cut -d"/" -f1 > /tmp/pacagelist.txt
 cat /tmp/pacagelist.txt | grep -v lib | tee /tmp/pacagelist.txt
