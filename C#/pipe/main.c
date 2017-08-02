@@ -41,7 +41,7 @@ int main(int argc, char const *argv[])
 			gold = gold -15;
 			close(fd[1]);
 			read(fd[0], buf, sizeof(buf));
-			printf("Received string: %s", buf);			
+			printf("Received string: %s", buf);
 		}
 	}	
 }

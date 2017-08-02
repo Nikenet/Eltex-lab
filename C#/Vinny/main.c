@@ -63,8 +63,10 @@ int main(int argc, char** argv) {
 						return 0;
 					}										
 				}				
+			
 			}
-							
+			
+
 			srand (getpid());
 			int random = rand() % 15+1;
 			sleep(random);
@@ -82,7 +84,7 @@ int main(int argc, char** argv) {
 			return 0;
 			
 		}
-	}
-
+	}	
+	printf("EXIT\n");
 	return 0;
 }
