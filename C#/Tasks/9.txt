@@ -234,7 +234,7 @@ void sumMatrixFromFile(char* fileName){
 				
 				 /* Отключимся от разделяемой памяти */
 				if (shmdt(shm) < 0) {
-					printf("Ошибка отключенияn");
+					printf("Ошибка отключения\n");
 					exit(1);
 				}
 				exit(0);
