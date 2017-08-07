@@ -74,7 +74,7 @@ int main(int argc, char **argv){
 	}
 
 	//ждем завершения всех процессов
-	wait(NULL);
+	wait(NULL); //лучше использовать waitpid в цикле!!
 
 	//удалим созданную разделяемую память и семафор
 	shmctl(shmid, IPC_RMID, 0);
