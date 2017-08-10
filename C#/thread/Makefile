@@ -1,13 +1,18 @@
 CC=gcc
 CFLAGS=-g -c -Wall
 TARGET=main
+SECONDTARGET=shmatnow
 
-$(TARGET): $(TARGET).o
-	$(CC) $(TARGET).o -o $(TARGET)	
+$(TARGET): $(TARGET).o $(SECONDTARGET).o
+	$(CC) $(TARGET).o -o $(TARGET) -pthread
+	$(CC) $(SECONDTARGET).o -o $(SECONDTARGET)
 
-$(TARGET).o: $(TARGET).c
+$(TARGET).o: $(TARGET).c $(SECONDTARGET).c
 	$(CC) $(CFLAGS) $(TARGET).c
+	$(CC) $(CFLAGS) $(SECONDTARGET).c
 
 clean:
 	rm -rf $(TARGET)
-	rm -rf $(TARGET).o	
+	rm -rf $(TARGET).o
+	rm -rf $(SECONDTARGET)
+	rm -rf $(SECONDTARGET).o

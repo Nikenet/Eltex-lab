@@ -1,15 +1,44 @@
 #!/bin/bash
 
-sudo echo "Вы запустили backuper scrypt"
-config.sh
+if (($(id -g) != 0)); then
+	echo "Permition denied"
+	exit 1
+fi
 
-while getopt "a:s:d:t"
-do
-	case $Options in
-	esac
+sudo echo "Backuper"
 
-sudo dd if=$target of=/home/nikenet/Eltex/Bash/backup/backup.img conv=noerror,sync 
+. /home/nikenet/Eltex/Bash/baskup/config.config
 
-sudo tar -cf ~$target
-mkdir backup
-rsync -a $target backup/
+echo "Path in:  " $PathIn
+echo "Path out: " $PathOut
+
+if [[ -d $PathIn ]]; then
+	echo "This is directory"
+	rsync -a $PathIn $PathOut
+	echo "Create crontab's rule"
+	crontab -l ; echo "12 0 * * * ./backup.sh " | crontab - #need edit
+	crontab -l
+	echo "Exit"
+	exit 0
+fi
+
+if [[ -f $PathIn ]]; then
+	echo "This is file"
+	tar -cf $PathOut/backup.tar $PathIn
+	echo "Create crontab's rule"
+	crontab -l ; echo "12 0 * * * ./backup.sh " | crontab - #need edit
+	crontab -l
+	echo "Exit"
+	exit 0
+fi
+
+if [[ -b $PathIn ]]; then
+	echo "This is external device"
+	dd if=$PathIn of=$PathOut/devbackup.img conv=noerror,sync
+	echo "Create crontab's rule"
+	crontab -l ; echo "12 0 * * * ./backup.sh " | crontab - #need edit
+	crontab -l
+	echo "Exit"
+	exit 0
+fi
+

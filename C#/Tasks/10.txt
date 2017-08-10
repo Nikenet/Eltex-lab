@@ -147,7 +147,7 @@ int main(int argc, char * argv[]){
 		if (result != 0) {
 			perror("Creating the first thread");
 			return EXIT_FAILURE;
-		}	
+		}
 	}
 
 	for (int i = 0; i < N; i++){
@@ -186,10 +186,10 @@ pthread_detach(pthread_t tid) - отсоединяет поток. Это же �
 #define N 5
 
 void *func(void *arg){
-	for (int i = 0; i<5; i++){
+	for (int i = 0; i<5; i++){coordinate
 		sleep(1);
 		printf("pthread id=%d iteration i=%d\n", pthread_self(), i);
-	}
+	}coordinate
 	return NULL;
 }
 
