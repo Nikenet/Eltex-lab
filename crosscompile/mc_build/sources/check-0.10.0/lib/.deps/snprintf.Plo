@@ -1,0 +1,119 @@
+snprintf.lo: snprintf.c /usr/arm-linux-gnueabi/include/stdc-predef.h \
+ ../config.h /usr/arm-linux-gnueabi/include/stdio.h \
+ /usr/arm-linux-gnueabi/include/features.h \
+ /usr/arm-linux-gnueabi/include/sys/cdefs.h \
+ /usr/arm-linux-gnueabi/include/bits/wordsize.h \
+ /usr/arm-linux-gnueabi/include/gnu/stubs.h \
+ /usr/arm-linux-gnueabi/include/gnu/stubs-soft.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stddef.h \
+ /usr/arm-linux-gnueabi/include/bits/types.h \
+ /usr/arm-linux-gnueabi/include/bits/typesizes.h \
+ /usr/arm-linux-gnueabi/include/libio.h \
+ /usr/arm-linux-gnueabi/include/_G_config.h \
+ /usr/arm-linux-gnueabi/include/wchar.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stdarg.h \
+ /usr/arm-linux-gnueabi/include/bits/stdio_lim.h \
+ /usr/arm-linux-gnueabi/include/bits/sys_errlist.h \
+ /usr/arm-linux-gnueabi/include/bits/stdio.h \
+ /usr/arm-linux-gnueabi/include/bits/stdio2.h \
+ /usr/arm-linux-gnueabi/include/errno.h \
+ /usr/arm-linux-gnueabi/include/bits/errno.h \
+ /usr/arm-linux-gnueabi/include/linux/errno.h \
+ /usr/arm-linux-gnueabi/include/asm/errno.h \
+ /usr/arm-linux-gnueabi/include/asm-generic/errno.h \
+ /usr/arm-linux-gnueabi/include/asm-generic/errno-base.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/limits.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/syslimits.h \
+ /usr/arm-linux-gnueabi/include/limits.h \
+ /usr/arm-linux-gnueabi/include/bits/posix1_lim.h \
+ /usr/arm-linux-gnueabi/include/bits/local_lim.h \
+ /usr/arm-linux-gnueabi/include/linux/limits.h \
+ /usr/arm-linux-gnueabi/include/bits/posix2_lim.h \
+ /usr/arm-linux-gnueabi/include/bits/xopen_lim.h \
+ /usr/arm-linux-gnueabi/include/inttypes.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stdint.h \
+ /usr/arm-linux-gnueabi/include/stdint.h \
+ /usr/arm-linux-gnueabi/include/bits/wchar.h \
+ /usr/arm-linux-gnueabi/include/locale.h \
+ /usr/arm-linux-gnueabi/include/bits/locale.h \
+ /usr/arm-linux-gnueabi/include/xlocale.h
+
+/usr/arm-linux-gnueabi/include/stdc-predef.h:
+
+../config.h:
+
+/usr/arm-linux-gnueabi/include/stdio.h:
+
+/usr/arm-linux-gnueabi/include/features.h:
+
+/usr/arm-linux-gnueabi/include/sys/cdefs.h:
+
+/usr/arm-linux-gnueabi/include/bits/wordsize.h:
+
+/usr/arm-linux-gnueabi/include/gnu/stubs.h:
+
+/usr/arm-linux-gnueabi/include/gnu/stubs-soft.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stddef.h:
+
+/usr/arm-linux-gnueabi/include/bits/types.h:
+
+/usr/arm-linux-gnueabi/include/bits/typesizes.h:
+
+/usr/arm-linux-gnueabi/include/libio.h:
+
+/usr/arm-linux-gnueabi/include/_G_config.h:
+
+/usr/arm-linux-gnueabi/include/wchar.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stdarg.h:
+
+/usr/arm-linux-gnueabi/include/bits/stdio_lim.h:
+
+/usr/arm-linux-gnueabi/include/bits/sys_errlist.h:
+
+/usr/arm-linux-gnueabi/include/bits/stdio.h:
+
+/usr/arm-linux-gnueabi/include/bits/stdio2.h:
+
+/usr/arm-linux-gnueabi/include/errno.h:
+
+/usr/arm-linux-gnueabi/include/bits/errno.h:
+
+/usr/arm-linux-gnueabi/include/linux/errno.h:
+
+/usr/arm-linux-gnueabi/include/asm/errno.h:
+
+/usr/arm-linux-gnueabi/include/asm-generic/errno.h:
+
+/usr/arm-linux-gnueabi/include/asm-generic/errno-base.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/limits.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/syslimits.h:
+
+/usr/arm-linux-gnueabi/include/limits.h:
+
+/usr/arm-linux-gnueabi/include/bits/posix1_lim.h:
+
+/usr/arm-linux-gnueabi/include/bits/local_lim.h:
+
+/usr/arm-linux-gnueabi/include/linux/limits.h:
+
+/usr/arm-linux-gnueabi/include/bits/posix2_lim.h:
+
+/usr/arm-linux-gnueabi/include/bits/xopen_lim.h:
+
+/usr/arm-linux-gnueabi/include/inttypes.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stdint.h:
+
+/usr/arm-linux-gnueabi/include/stdint.h:
+
+/usr/arm-linux-gnueabi/include/bits/wchar.h:
+
+/usr/arm-linux-gnueabi/include/locale.h:
+
+/usr/arm-linux-gnueabi/include/bits/locale.h:
+
+/usr/arm-linux-gnueabi/include/xlocale.h:

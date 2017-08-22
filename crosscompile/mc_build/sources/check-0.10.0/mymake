@@ -1,0 +1,8 @@
+#!/bin/bash
+ARCH=arm \
+CC=arm-linux-gnueabi-gcc ./configure \
+--host=arm-linux-gnueabi \
+--prefix=/tmp/mc_build/builds/build_check-0.10.0/ \
+--enable-static=yes
+make
+sudo make install

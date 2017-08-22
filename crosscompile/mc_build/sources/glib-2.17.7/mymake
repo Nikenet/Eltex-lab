@@ -1,0 +1,19 @@
+#!/bin/bash
+ 
+echo "glib_cv_stack_grows=no" > arm-linux.cache
+echo "glib_cv_uscore=no" >> arm-linux.cache
+echo "ac_cv_func_posix_getpwuid_r=no" >> arm-linux.cache
+echo "ac_cv_func_posix_getgrgid_r=no" >> arm-linux.cache
+ 
+ARCH=arm \
+CC=arm-linux-gnueabi-gcc ./configure \
+ZLIB_CFLAGS="-I/tmp/mc_build/builds/build_zlib-1.2.8/usr/local/include/" \
+ZLIB_LIBS="-L/tmp/mc_build/builds/build_zlib-1.2.8/usr/local/lib -lz" \
+LIBFFI_CFLAGS="-I/tmp/mc_build/builds/build_libffi-3.2.1/lib/libffi-3.2.1/include" \
+LIBFFI_LIBS="-L/tmp/mc_build/builds/build_libffi-3.2.1/lib -lffi" \
+--host=arm-linux-gnueabi \
+--prefix=/tmp/mc_build/builds/build_glib-2.44.1 \
+--enable-static=yes \
+--cache-file=arm-linux.cache
+make -j3
+sudo make install

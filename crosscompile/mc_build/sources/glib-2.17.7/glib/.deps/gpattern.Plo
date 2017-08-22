@@ -1,0 +1,99 @@
+gpattern.lo: gpattern.c /usr/arm-linux-gnueabi/include/stdc-predef.h \
+ ../config.h /usr/arm-linux-gnueabi/include/string.h \
+ /usr/arm-linux-gnueabi/include/features.h \
+ /usr/arm-linux-gnueabi/include/sys/cdefs.h \
+ /usr/arm-linux-gnueabi/include/bits/wordsize.h \
+ /usr/arm-linux-gnueabi/include/gnu/stubs.h \
+ /usr/arm-linux-gnueabi/include/gnu/stubs-soft.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stddef.h \
+ /usr/arm-linux-gnueabi/include/xlocale.h \
+ /usr/arm-linux-gnueabi/include/bits/string.h \
+ /usr/arm-linux-gnueabi/include/bits/string2.h \
+ /usr/arm-linux-gnueabi/include/stdlib.h \
+ /usr/arm-linux-gnueabi/include/bits/string3.h gpattern.h \
+ ../glib/gtypes.h ../glibconfig.h ../glib/gmacros.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/limits.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/syslimits.h \
+ /usr/arm-linux-gnueabi/include/limits.h \
+ /usr/arm-linux-gnueabi/include/bits/posix1_lim.h \
+ /usr/arm-linux-gnueabi/include/bits/local_lim.h \
+ /usr/arm-linux-gnueabi/include/linux/limits.h \
+ /usr/arm-linux-gnueabi/include/bits/posix2_lim.h \
+ /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/float.h gmacros.h \
+ gmessages.h /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stdarg.h \
+ gmem.h ../glib/gslice.h gunicode.h ../glib/gerror.h ../glib/gquark.h \
+ gutils.h galias.h galiasdef.c
+
+/usr/arm-linux-gnueabi/include/stdc-predef.h:
+
+../config.h:
+
+/usr/arm-linux-gnueabi/include/string.h:
+
+/usr/arm-linux-gnueabi/include/features.h:
+
+/usr/arm-linux-gnueabi/include/sys/cdefs.h:
+
+/usr/arm-linux-gnueabi/include/bits/wordsize.h:
+
+/usr/arm-linux-gnueabi/include/gnu/stubs.h:
+
+/usr/arm-linux-gnueabi/include/gnu/stubs-soft.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stddef.h:
+
+/usr/arm-linux-gnueabi/include/xlocale.h:
+
+/usr/arm-linux-gnueabi/include/bits/string.h:
+
+/usr/arm-linux-gnueabi/include/bits/string2.h:
+
+/usr/arm-linux-gnueabi/include/stdlib.h:
+
+/usr/arm-linux-gnueabi/include/bits/string3.h:
+
+gpattern.h:
+
+../glib/gtypes.h:
+
+../glibconfig.h:
+
+../glib/gmacros.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/limits.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include-fixed/syslimits.h:
+
+/usr/arm-linux-gnueabi/include/limits.h:
+
+/usr/arm-linux-gnueabi/include/bits/posix1_lim.h:
+
+/usr/arm-linux-gnueabi/include/bits/local_lim.h:
+
+/usr/arm-linux-gnueabi/include/linux/limits.h:
+
+/usr/arm-linux-gnueabi/include/bits/posix2_lim.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include/float.h:
+
+gmacros.h:
+
+gmessages.h:
+
+/usr/lib/gcc-cross/arm-linux-gnueabi/6/include/stdarg.h:
+
+gmem.h:
+
+../glib/gslice.h:
+
+gunicode.h:
+
+../glib/gerror.h:
+
+../glib/gquark.h:
+
+gutils.h:
+
+galias.h:
+
+galiasdef.c:
