@@ -19,7 +19,6 @@ int main(int argc, char *argv[])
 	unsigned short broadcastPort;     /* Port */
 	char recvString[MAXRECVSTRING+1]; /* Buffer for received string */
 	int recvStringLen;                /* Length of received string */
-	const char *ip = "192.168.2.255";
 
 	/* Create a best-effort datagram socket using UDP */
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -28,7 +27,7 @@ int main(int argc, char *argv[])
 	/* Construct bind structure */
 	memset(&broadcastAddr, 0, sizeof(broadcastAddr));   /* Zero out structure */
 	broadcastAddr.sin_family = AF_INET;                 /* Internet address family */
-	broadcastAddr.sin_addr.s_addr = inet_addr(ip);  /* Any incoming interface */
+	broadcastAddr.sin_addr.s_addr = htonl(INADDR_ANY);  /* Any incoming interface */
 	broadcastAddr.sin_port = htons(2000);      /* Broadcast port */
 
 	/* Bind to the broadcast port */
@@ -36,11 +35,16 @@ int main(int argc, char *argv[])
 		DieWithError("bind() failed");
 
 	/* Receive a single datagram from the server */
-	if ((recvStringLen = recvfrom(sock, recvString, MAXRECVSTRING, 0, NULL, 0)) < 0)
+	struct sockaddr_in src_addr;
+	socklen_t src_addr_len = sizeof(src_addr);
+	memset(&src_addr, 0x00, src_addr_len);
+
+	if ((recvStringLen = recvfrom(sock, recvString, MAXRECVSTRING, 0, (struct sockaddr *) &src_addr, &src_addr_len)) < 0)
 		DieWithError("recvfrom() failed");
 
 	recvString[recvStringLen] = '\0';
 	printf("Received: %s\n", recvString);    /* Print the received string */
+	printf("%s\n", inet_ntoa(src_addr.sin_addr));
 	
 	close(sock);
 	exit(0);
