@@ -49,7 +49,7 @@ int main(int argc, char const *argv[]){
 	}
 
 	//создаем указатель на начало разделяемой памяти
-	Data *data = shmat(shmid, (void *) 0, 0);
+	Data *data = shmat (shmid, (void *) 0, 0);
 
 	//заполяем структуру
 	for (int i = 0; i < count; ++i){

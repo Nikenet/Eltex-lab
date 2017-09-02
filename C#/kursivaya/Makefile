@@ -14,7 +14,5 @@ $(TARGET).o: $(TARGET).c $(SECONDTARGER).c
 
 clean:
 	rm -rf server
-	rm -rf $(TARGET).o
 	rm -rf $(SECONDTARGER)
-	rm -rf $(SECONDTARGER).o
 	rm -rf *.o
