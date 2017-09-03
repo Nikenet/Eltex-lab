@@ -92,15 +92,16 @@ void *TcpConnection(void *arg){
 
 int main(int argc, char *argv[])
 {	
-	int count = 2;            /* Count of thread*/
+	int count = 2;            /* Count of thread */
 	pthread_t threads[count]; /* Thread descriptor */
-	void *status[count];
+	void *status[count];      /* Status of thread */
 
 
 	pthread_create(&threads[1], NULL, UdpBroadcastSender, 0); /* Start UDP broadcast sender */
 	pthread_create(&threads[2], NULL, TcpConnection, 0);	  /* Start TCP connections listener*/
 
-	pthread_join(threads[1], &status[1]);
-	pthread_join(threads[2], &status[2]);
+	pthread_join(threads[1], &status[1]);  /* Wait UDP broadcast sender */                   
+	pthread_join(threads[2], &status[2]);  /* Wait TCP connections listener*/
+
 	
 }
