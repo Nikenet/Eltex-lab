@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
 	if((shmid = shmget(key, shmsize, 0)) < 0){
 		printf("Can\'t find shared memory\n");
 		exit(-1);
-	}
+	}!
 
 	//позвращаем указатель на начало разделяемой памяти
 	Data *data = shmat(shmid, (void *) 0, 0);

@@ -6,11 +6,37 @@
 #include <stdlib.h>     /* for atoi() and exit() */
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
+#include <string.h>
+#include <time.h>
 
 #define MAXRECVSTRING 255  /* Longest string to receive */
 #define RCVBUFSIZE 32      /* Size of receive buffer */
 
 void DieWithError(char *errorMessage);  /* External error handling function */
+
+/* Random string generator */
+char *randstring(int length) {    
+    char *string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
+    size_t stringLen = 26*2+10+7;        
+    char *randomString;
+
+    randomString = malloc(sizeof(char) * (length +1));
+
+    if (!randomString) {
+        return (char*)0;
+    }
+
+    unsigned int key = 0;
+
+    for (int n = 0;n < length;n++){            
+        key = rand() % stringLen;          
+        randomString[n] = string[key];
+    }
+
+    randomString[length] = '\0';
+
+    return randomString;
+}
 
 int main(int argc, char *argv[])
 {
@@ -54,8 +80,7 @@ int main(int argc, char *argv[])
 	
 	close(sock);
 
-	servIP = inet_ntoa(src_addr.sin_addr);    /* First arg: server IP address (dotted quad) */
-	echoString = "tcp strings generate";      /* Second arg: string to echo */
+	servIP = inet_ntoa(src_addr.sin_addr);    /* server IP address (dotted quad) */
 	src_port = 2500;			              /* Use given port */
 
 	/* Create a reliable, stream socket using TCP */
@@ -70,17 +95,21 @@ int main(int argc, char *argv[])
 	if (connect(sock, (struct sockaddr *) &src_addr, sizeof(src_addr)) < 0)
 		DieWithError("connect() failed");
 
-	echoStringLen = strlen(echoString);             /* Determine input length */
+	
 
 	for (;;){
+		
+		echoString = randstring(10);;                   
+		echoStringLen = strlen(echoString);             
+
 		if (send(sock, echoString, echoStringLen, 0) != echoStringLen)
 			DieWithError("send() sent a different number of bytes than expected");
 
 		/* Receive the same string back from the server */
 		totalBytesRcvd = 0;
 		printf("TCP Received: ");                           /* Setup to print the echoed string */
-		while (totalBytesRcvd < echoStringLen)
-		{
+		while (totalBytesRcvd < echoStringLen){
+
 			/* Receive up to the buffer size (minus 1 to leave space for a null terminator) bytes from the sender */
 			if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0)
 				DieWithError("recv() failed or connection closed prematurely");
@@ -92,6 +121,4 @@ int main(int argc, char *argv[])
 			sleep(3);
 		}
 	}
-	// close(sock);
-	// exit(0);
 }
