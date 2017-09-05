@@ -6,14 +6,21 @@
 #include <stdlib.h>     /* for atoi() and exit() */
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
-#include <pthread.h>    /* for phtread_create() */
 #include <sys/types.h>  /* for pthread_t type */
+#include "TCPEchoServer.h"  /* TCP echo server includes */
+#include <pthread.h>        /* for POSIX threads */
 
 
 #define MAXPENDING 5    /* Maximum outstanding connection requests */
 
+struct ThreadArgs
+{
+    int clntSock;                      /* Socket descriptor for client */
+};
+
 void DieWithError(char *errorMessage);  /* External error handling function */
 void HandleTCPClient(int clntSocket);   /* TCP client handling function */
+void *ThreadMain(void *arg);            /* Main program of a thread */
 
 void *UdpBroadcastSender(void *arg){
 
@@ -49,46 +56,97 @@ void *UdpBroadcastSender(void *arg){
 	}
 }
 
-void *TcpConnection(void *arg){
+void *ThreadMain(void *threadArgs)
+{
+    int clntSock;                   /* Socket descriptor for client connection */
 
-	int servSock;                    /* Socket descriptor for server */
-	int clntSock;                    /* Socket descriptor for client */
-	struct sockaddr_in echoServAddr; /* Local address */
-	struct sockaddr_in echoClntAddr; /* Client address */
-	unsigned short echoServPort;     /* Server port */
-	unsigned int clntLen;            /* Length of client address data structure */
+    /* Guarantees that thread resources are deallocated upon return */
+    pthread_detach(pthread_self()); 
 
-	if ((servSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-		DieWithError("socket() failed");
+    /* Extract socket file descriptor from argument */
+    clntSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
+    free(threadArgs);              /* Deallocate memory for argument */
 
-	echoServPort = htons(2500);
-	  
-	memset(&echoServAddr, 0, sizeof(echoServAddr));   /* Zero out structure */
-	echoServAddr.sin_family = AF_INET;                /* Internet address family */
-	echoServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-	echoServAddr.sin_port = echoServPort;             /* Local port */
+    HandleTCPClient(clntSock);
 
-	if (bind(servSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
-		DieWithError("bind() failed");
-
-	if (listen(servSock, MAXPENDING) < 0)
-		DieWithError("listen() failed");
-
-	for (;;) /* Run forever */
-	{
-		/* Set the size of the in-out parameter */
-		clntLen = sizeof(echoClntAddr);
-
-		/* Wait for a client to connect */
-		if ((clntSock = accept(servSock, (struct sockaddr *) &echoClntAddr, &clntLen)) < 0)
-			DieWithError("accept() failed");
-
-		/* clntSock is connected to a client! */
-
-		printf("TCP Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
-		HandleTCPClient(clntSock);
-	}
+    return (NULL);
 }
+
+// void *TcpConnection(void *arg){
+
+// 	int servSock;                    /* Socket descriptor for server */
+// 	int clntSock;                    /* Socket descriptor for client */
+// 	struct sockaddr_in echoServAddr; /* Local address */
+// 	struct sockaddr_in echoClntAddr; /* Client address */
+// 	unsigned short echoServPort;     /* Server port */
+// 	unsigned int clntLen;            /* Length of client address data structure */
+
+// 	if ((servSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+// 		DieWithError("socket() failed");
+
+// 	echoServPort = htons(2500);
+	  
+// 	memset(&echoServAddr, 0, sizeof(echoServAddr));   /* Zero out structure */
+// 	echoServAddr.sin_family = AF_INET;                /* Internet address family */
+// 	echoServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+// 	echoServAddr.sin_port = echoServPort;             /* Local port */
+
+// 	if (bind(servSock, (struct sockaddr *) &echoServAddr, sizeof(echoServAddr)) < 0)
+// 		DieWithError("bind() failed");
+
+// 	if (listen(servSock, MAXPENDING) < 0)
+// 		DieWithError("listen() failed");
+
+// 	for (;;) /* Run forever */
+// 	{
+// 		/* Set the size of the in-out parameter */
+// 		clntLen = sizeof(echoClntAddr);
+
+// 		/* Wait for a client to connect */
+// 		if ((clntSock = accept(servSock, (struct sockaddr *) &echoClntAddr, &clntLen)) < 0)
+// 			DieWithError("accept() failed");
+
+// 		/* clntSock is connected to a client! */
+
+// 		printf("TCP Handling client %s\n", inet_ntoa(echoClntAddr.sin_addr));
+// 		HandleTCPClient(clntSock);
+// 	}
+// }
+
+/* Structure of arguments to pass to client thread */
+
+void *TcpConnection(void *arg)
+{
+    int servSock;                    /* Socket descriptor for server */
+    int clntSock;                    /* Socket descriptor for client */
+    unsigned short echoServPort;     /* Server port */
+    pthread_t threadID;              /* Thread ID from pthread_create() */
+    struct ThreadArgs *threadArgs;   /* Pointer to argument structure for thread */
+
+    echoServPort = 2500;  /* First arg:  local port */
+
+    servSock = CreateTCPServerSocket(echoServPort);
+
+    for (;;) /* run forever */
+    {
+	clntSock = AcceptTCPConnection(servSock);
+
+        /* Create separate memory for client argument */
+        if ((threadArgs = (struct ThreadArgs *) malloc(sizeof(struct ThreadArgs))) == NULL)
+            DieWithError("malloc() failed");
+
+        threadArgs -> clntSock = clntSock;
+
+        /* Create client thread */
+        if (pthread_create(&threadID, NULL, ThreadMain, (void *) threadArgs) != 0)
+            DieWithError("pthread_create() failed");
+
+        printf("with thread %ld\n", (long int) threadID);
+    }
+    /* NOT REACHED */
+}
+
+
 
 int main(int argc, char *argv[])
 {	

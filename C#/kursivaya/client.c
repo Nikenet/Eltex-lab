@@ -72,23 +72,26 @@ int main(int argc, char *argv[])
 
 	echoStringLen = strlen(echoString);             /* Determine input length */
 
-	if (send(sock, echoString, echoStringLen, 0) != echoStringLen)
-		DieWithError("send() sent a different number of bytes than expected");
+	for (;;){
+		if (send(sock, echoString, echoStringLen, 0) != echoStringLen)
+			DieWithError("send() sent a different number of bytes than expected");
 
-	/* Receive the same string back from the server */
-	totalBytesRcvd = 0;
-	printf("TCP Received: ");                           /* Setup to print the echoed string */
-	while (totalBytesRcvd < echoStringLen)
-	{
-		/* Receive up to the buffer size (minus 1 to leave space for a null terminator) bytes from the sender */
-		if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0)
-			DieWithError("recv() failed or connection closed prematurely");
+		/* Receive the same string back from the server */
+		totalBytesRcvd = 0;
+		printf("TCP Received: ");                           /* Setup to print the echoed string */
+		while (totalBytesRcvd < echoStringLen)
+		{
+			/* Receive up to the buffer size (minus 1 to leave space for a null terminator) bytes from the sender */
+			if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE - 1, 0)) <= 0)
+				DieWithError("recv() failed or connection closed prematurely");
 
-		totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
-		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
-		printf("%s\n", echoBuffer);    /* Print the echo buffer */
+			totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
+			echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
+			printf("%s\n", echoBuffer);    /* Print the echo buffer */
+
+			sleep(3);
+		}
 	}
-
-	close(sock);
-	exit(0);
+	// close(sock);
+	// exit(0);
 }
