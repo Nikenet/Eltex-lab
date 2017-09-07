@@ -1,4 +1,4 @@
-/*Клиент 1го типа*/
+/* Клиент 2го типа */
 
 #include <stdio.h>      /* for printf() and fprintf() */
 #include <sys/socket.h> /* for socket(), connect(), sendto(), and recvfrom() */
@@ -7,39 +7,16 @@
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
 #include <string.h>
-#include <time.h>
 
 #define MAXRECVSTRING 255  /* Longest string to receive */
+#define RCVBUFSIZE 32      /* Size of receive buffer */
 
 void DieWithError(char *errorMessage);  /* External error handling function */
-
-/* Random string generator */
-char *randstring(int length) {    
-    char *string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
-    size_t stringLen = 26*2+10+7;        
-    char *randomString;
-
-    randomString = malloc(sizeof(char) * (length +1));
-
-    if (!randomString) {
-        return (char*)0;
-    }
-
-    unsigned int key = 0;
-
-    for (int n = 0;n < length;n++){            
-        key = rand() % stringLen;          
-        randomString[n] = string[key];
-    }
-
-    randomString[length] = '\0';
-
-    return randomString;
-}
 
 int main(int argc, char *argv[])
 {
 	int sock;                         /* Socket */
+
 	struct sockaddr_in broadcastAddr; /* Broadcast Address */
 	unsigned short broadcastPort;     /* Broadcast port */
 	char recvString[MAXRECVSTRING+1]; /* Buffer for received string */
@@ -50,13 +27,13 @@ int main(int argc, char *argv[])
 	struct sockaddr_in src_addr;	  /* Echo server address */
 	unsigned short src_port;     	  /* Echo server port */
 	char *servIP;                     /* Server IP address (dotted quad) */
-	char *echoString;                 /* String to send to echo server */
-	unsigned int echoStringLen;       /* Length of string to echo */
+	char echoBuffer[RCVBUFSIZE];      /* Buffer for echo string */
+	int bytesRcvd, totalBytesRcvd;    /* Bytes read in single recv() and total bytes read */
 
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
 
-	broadcastPort = htons(2001);
+	broadcastPort = htons(2002);
 
 	memset(&broadcastAddr, 0, sizeof(broadcastAddr));   /* Zero out structure */
 	broadcastAddr.sin_family = AF_INET;                 /* Internet address family */
@@ -75,11 +52,11 @@ int main(int argc, char *argv[])
 	recvString[recvStringLen] = '\0';
 	printf("UDP Broadcdas received: %s\n", recvString);      		 /* Print the received string */
 	printf("Server address: %s\n", inet_ntoa(src_addr.sin_addr));	 /* Print source ip */
-
+	
 	close(sock);
 
 	servIP = inet_ntoa(src_addr.sin_addr);    /* server IP address (dotted quad) */
-	src_port = 2500;			              /* Use given port */
+	src_port = 2700;			              /* Use given port */
 
 	/* Create a reliable, stream socket using TCP */
 	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
@@ -93,18 +70,20 @@ int main(int argc, char *argv[])
 	if (connect(sock, (struct sockaddr *) &src_addr, sizeof(src_addr)) < 0)
 		DieWithError("connect() failed");	
 
-	printf("Start TCP sending\n");
+	printf("Start TCP recieving\n");
 	for (;;){
 
 		++i;
-		echoString = randstring(10);             
-		echoStringLen = strlen(echoString);             
 
-		printf("[%d]\tTCP sended:\t%s\n", i, echoString);
-		
-		if (send(sock, echoString, echoStringLen, 0) != echoStringLen)
-			DieWithError("send() sent a different number of bytes than expected");	                 
+		if ((bytesRcvd = recv(sock, echoBuffer, 10, 0)) <= 0)
+			DieWithError("recv() failed or connection closed prematurely");
+
+		totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
+		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
+
+		printf("[%d]\tTCP recieved:\t%s\n", i, echoBuffer);
 
 		sleep(3);
-	}	
+		
+	}
 }
