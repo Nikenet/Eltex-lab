@@ -8,8 +8,8 @@
 #include <unistd.h>     /* for close() */
 #include <string.h>
 
-#define MAXRECVSTRING 255  /* Longest string to receive */
-#define RCVBUFSIZE 32      /* Size of receive buffer */
+#define MAXRECVSTRING 100  /* Longest string to receive */
+#define RCVBUFSIZE 10      /* Size of receive buffer */
 
 void DieWithError(char *errorMessage);  /* External error handling function */
 
@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
 	struct sockaddr_in broadcastAddr; /* Broadcast Address */
 	unsigned short broadcastPort;     /* Broadcast port */
-	char recvString[MAXRECVSTRING+1]; /* Buffer for received string */
+	char *recvString; /* Buffer for received string */
 	int recvStringLen;                /* Length of received string */
 
 	int i=0;
@@ -28,8 +28,9 @@ int main(int argc, char *argv[])
 	unsigned short src_port;     	  /* Echo server port */
 	char *servIP;                     /* Server IP address (dotted quad) */
 	char echoBuffer[RCVBUFSIZE];      /* Buffer for echo string */
-	int bytesRcvd, totalBytesRcvd;    /* Bytes read in single recv() and total bytes read */
+	int bytesRcvd;    /* Bytes read in single recv() and total bytes read */
 
+	recvString = (char *) malloc(sizeof(char) * MAXRECVSTRING);
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
 
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
 	close(sock);
 
 	servIP = inet_ntoa(src_addr.sin_addr);    /* server IP address (dotted quad) */
-	src_port = 2700;			              /* Use given port */
+	src_port = 1500;			              /* Use given port */
 
 	/* Create a reliable, stream socket using TCP */
 	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
@@ -70,20 +71,20 @@ int main(int argc, char *argv[])
 	if (connect(sock, (struct sockaddr *) &src_addr, sizeof(src_addr)) < 0)
 		DieWithError("connect() failed");	
 
+	bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE, 0);
+
 	printf("Start TCP recieving\n");
-	for (;;){
+
+	while (bytesRcvd > 0){
 
 		++i;
 
-		if ((bytesRcvd = recv(sock, echoBuffer, 10, 0)) <= 0)
-			DieWithError("recv() failed or connection closed prematurely");
-
-		totalBytesRcvd += bytesRcvd;   /* Keep tally of total bytes */
-		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */
+		if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE, 0)) < 0)
+			DieWithError("recv() failed");		
 
 		printf("[%d]\tTCP recieved:\t%s\n", i, echoBuffer);
-
-		sleep(3);
-		
+		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */		
 	}
+
+	close(sock);
 }

@@ -49,7 +49,7 @@ void *UdpBroadcastSenderOne(void *arg){
 	sendStringLen = strlen(sendString);                     /* Find length of sendString */
 	
 	for (;;){ /* Run forever */
-		
+		sleep(1);
 		if (sendto(sock, sendString, sendStringLen, 0, (struct sockaddr *) &broadcastAddr, sizeof(broadcastAddr)) != sendStringLen)
 			DieWithError("sendto() sent a different number of bytes than expected");
 	}
@@ -82,7 +82,7 @@ void *UdpBroadcastSenderTwo(void *arg){
 	sendStringLen = strlen(sendString);                     /* Find length of sendString */
 	
 	for (;;){ /* Run forever */
-		
+		sleep(1);
 		if (sendto(sock, sendString, sendStringLen, 0, (struct sockaddr *) &broadcastAddr, sizeof(broadcastAddr)) != sendStringLen)
 			DieWithError("sendto() sent a different number of bytes than expected");
 	}
@@ -99,8 +99,7 @@ void *ThreadMain(void *threadArgs){
     free(threadArgs);              /* Deallocate memory for argument */
 
     HandleTCPClient(clntSock);
-
-    return (NULL);
+    return 0;
 }
 
 void *ThreadMainTwo(void *threadArgs){	
@@ -113,10 +112,12 @@ void *ThreadMainTwo(void *threadArgs){
     clntSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
     free(threadArgs);              /* Deallocate memory for argument */
 
-    HandleTCPClientTwo(clntSock);
-
-    return (NULL);
-}
+    for (;;){
+    	HandleTCPClientTwo(clntSock);
+    	sleep(3);
+    }
+    return 0;
+} 
 
 void *TcpConnectionOne(void *arg){
     int servSock;                    /* Socket descriptor for server */
@@ -154,7 +155,7 @@ void *TcpConnectionTwo(void *arg){
     pthread_t threadID;              /* Thread ID from pthread_create() */
     struct ThreadArgs *threadArgs;   /* Pointer to argument structure for thread */
 	
-    echoServPort = 2700;  /* First arg:  local port */
+    echoServPort = 1500;  /* First arg:  local port */
 
     servSock = CreateTCPServerSocket(echoServPort);
 

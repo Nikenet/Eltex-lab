@@ -5,42 +5,46 @@
 #include <string.h>
 #include <stdlib.h>     /* for atoi() and exit() */
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h> 
+#include <sys/msg.h>
 
 #define RCVBUFSIZE 10   /* Size of receive buffer */
 #define MAX_SEND_SIZE 10
-#define FIFO1 "/tmp/fifo.1"
-#define MAXLINE 80
+#define MSGSZ 10
+
+typedef struct msgbuf {
+	long    mtype;
+	char    mtext[MSGSZ];
+} message_buf;
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
 void HandleTCPClientTwo(int clntSocket)
 {
-	char echoBuffer[RCVBUFSIZE];        /* Buffer for echo string */
 	int recvMsgSize;                    /* Size of received message */
-	int readfd, writefd;
-	char *str = (char *) malloc(sizeof(char) * 10);
 
-	mkfifo(FIFO1, 0666);
+	int msqid;
+	key_t key;
+	message_buf  rbuf;
 
-	recvMsgSize = 10;
+	key = 10;
+
+	if ((msqid = msgget(key, 0666 )) < 0) {
+		perror("msgget");
+		exit(1);
+	}
+
+	recvMsgSize = sizeof(struct msgbuf) - sizeof(long);
 	
 	/* Send received string and receive again until end of transmission */
-	while (recvMsgSize > 0)      /* zero indicates end of transmission */
-	{   
-		close(readfd);  
-		readfd = open(FIFO1, O_WRONLY, 0); // open and block pipe
-        read(readfd, str, 10);      // read in pipe        
+			//look
+		if (msgrcv(msqid, &rbuf, recvMsgSize, 1, 0) < 0) {
+		perror("msgrcv");
+		}        
 
-        printf("Read to FIFO: %s\n", str);
+		printf("Read to MSG: %s, size %ld\n", rbuf.mtext, sizeof(rbuf.mtext));
 
 		/* Echo message back to client */
-		if (send(clntSocket, echoBuffer, recvMsgSize, 0) != recvMsgSize)
+		if (send(clntSocket, rbuf.mtext, sizeof(rbuf.mtext), 0) != sizeof(rbuf.mtext))
 			DieWithError("send() failed");
-
-		
-	}
-	close(clntSocket);    /* Close client socket */
 }
+

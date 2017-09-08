@@ -5,43 +5,69 @@
 #include <string.h>
 #include <stdlib.h>     /* for atoi() and exit() */
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/msg.h>
+
 
 #define RCVBUFSIZE 10   /* Size of receive buffer */
-#define MAX_SEND_SIZE 10
-#define FIFO1 "/tmp/fifo.1"
-#define MAXLINE 80
+#define MSGSZ     10
+
+typedef struct msgbuf {
+	long    mtype;
+	char    mtext[MSGSZ];
+} message_buf;
+
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
 void HandleTCPClient(int clntSocket)
 {
-    char echoBuffer[RCVBUFSIZE];        /* Buffer for echo string */
-    int recvMsgSize;                    /* Size of received message */
-    int readfd, writefd;
+	char echoBuffer[RCVBUFSIZE];        /* Buffer for echo string */
+	int recvMsgSize;                    /* Size of received message */
+	int readfd, writefd;
 
-    mkfifo(FIFO1, 0666); // create FIFO pipe
+	int msqid;
+	int msgflg = IPC_CREAT | 0666;
+	key_t key;
+	message_buf sbuf;
+	size_t buf_length;
 
-    /* Receive message from client */
-    if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
-        DieWithError("recv() failed");
+	key = 10;
 
-    /* Send received string and receive again until end of transmission */
-    while (recvMsgSize > 0)      /* zero indicates end of transmission */
-    {   
-        close(writefd);
-        writefd = open(FIFO1, O_WRONLY, 0); // open and block pipe
-        write(writefd, echoBuffer, 10);    // write in pipe
-        
-        printf("Write to FIFO: %s\n", echoBuffer);
+	if ((msqid = msgget(key, msgflg )) < 0) {
+		perror("msgget");
+		exit(1);
+	}
+	else 
+		printf("msgget: msgget succeeded: msqid = %d\n", msqid);
 
-        /* See if there is more data to receive */
-        if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
-            DieWithError("recv() failed");
+	sbuf.mtype = 1;
 
 
-    }
+	/* Receive message from client */
+	if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+		DieWithError("recv() failed");
 
-    close(clntSocket);    /* Close client socket */
+	/* Send received string and receive again until end of transmission */
+	while (recvMsgSize > 0)      /* zero indicates end of transmission */
+	{   
+
+		strcpy(sbuf.mtext, echoBuffer);
+		buf_length = sizeof(struct msgbuf) - sizeof(long);
+
+		if (msgsnd(msqid, &sbuf, buf_length, 0) < 0) {
+			printf ("%d, %ld, %s, %ld\n", msqid, sbuf.mtype, sbuf.mtext, buf_length);
+			perror("msgsnd");
+			exit(1);
+		} 
+		else
+			printf("Write to MSG: %s\n", sbuf.mtext);
+
+		/* See if there is more data to receive */
+		if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+			DieWithError("recv() failed");
+
+		
+	}
+
+	close(clntSocket);    /* Close client socket */
 }
