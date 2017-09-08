@@ -1,39 +1,39 @@
-/* Сервер */
-
-#include <stdio.h>      /* for printf() and fprintf() */
-#include <sys/socket.h> /* for socket() and bind() */
-#include <arpa/inet.h>  /* for sockaddr_in */
-#include <stdlib.h>     /* for atoi() and exit() */
-#include <string.h>     /* for memset() */
-#include <unistd.h>     /* for close() */
-#include <sys/types.h>  /* for pthread_t type */
+#include <stdio.h>      	/* for printf() and fprintf() */
+#include <sys/socket.h> 	/* for socket() and bind() */
+#include <arpa/inet.h>  	/* for sockaddr_in */
+#include <stdlib.h>     	/* for atoi() and exit() */
+#include <string.h>     	/* for memset() */
+#include <unistd.h>     	/* for close() */
+#include <sys/types.h>		/* for pthread_t type */
 #include "TCPEchoServer.h"  /* TCP echo server includes */
 #include <pthread.h>        /* for POSIX threads */
 
-#define MAXPENDING 5    /* Maximum outstanding connection requests */
+#define MAXPENDING        5     /* Maximum outstanding connection requests */
+#define BPORTFORCLIENTS   2001  /* Broadcast port for clients*/
+#define BPORTFORMANAGERS  2002  /* Broadcast port for managers*/
+#define PORTFORCLIENTS    2500  /* Port to TCP connections for clients*/
+#define PORTFORMANAGERS   1500  /* Port to TCP connections for managers*/
+
+char *broadcastIP;
 
 struct ThreadArgs{
-    int clntSock;                      /* Socket descriptor for client */
+	int clntSock;		/* Socket descriptor for client */
 };
 
-void DieWithError(char *errorMessage);  /* External error handling function */
-void HandleTCPClient(int clntSocket);   /* TCP client handling function */
-void HandleTCPClientTwo(int clntSocket);   /* TCP client handling function */
+void DieWithError(char *errorMessage);  	/* External error handling function */
+void HandleTCPClient(int clntSocket);		/* TCP client handling function */
+void HandleTCPManages(int clntSocket);      /* TCP client handling function */
 
-void *ThreadMain(void *arg);            /* Main program of a thread */
+void *UdpBroadcastSenderForClient(void *arg){
 
-void *UdpBroadcastSenderOne(void *arg){
-
-	int sock;                         /* Socket */
-	struct sockaddr_in broadcastAddr; /* Broadcast address */
-	char *broadcastIP;                /* IP broadcast address */
-	unsigned short broadcastPort;     /* Server port */
+	int sock;									/* Socket */
+	struct sockaddr_in broadcastAddr;			/* Broadcast address */
+	unsigned short broadcastPort;				/* Server port */
 	const char *sendString = "UDP to clients";
-	int broadcastPermission;          /* Socket opt to set permission to broadcast */
-	unsigned int sendStringLen;       /* Length of string to broadcast */
+	int broadcastPermission;					/* Socket opt to set permission to broadcast */
+	unsigned int sendStringLen;					/* Length of string to broadcast */
 
-	broadcastIP = "192.168.2.255";    /* First arg:  broadcast IP address */ 
-	broadcastPort = htons(2001);      /* Second arg:  broadcast port */
+	broadcastPort = htons(BPORTFORCLIENTS);		/* Broadcast port */
 
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
@@ -55,18 +55,16 @@ void *UdpBroadcastSenderOne(void *arg){
 	}
 }
 
-void *UdpBroadcastSenderTwo(void *arg){
+void *UdpBroadcastSenderForManager(void *arg){
 
-	int sock;                         /* Socket */
-	struct sockaddr_in broadcastAddr; /* Broadcast address */
-	char *broadcastIP;                /* IP broadcast address */
-	unsigned short broadcastPort;     /* Server port */
+	int sock;									/* Socket */
+	struct sockaddr_in broadcastAddr; 			/* Broadcast address */
+	unsigned short broadcastPort;				/* Server port */
 	const char *sendString = "UDP to manager";
-	int broadcastPermission;          /* Socket opt to set permission to broadcast */
-	unsigned int sendStringLen;       /* Length of string to broadcast */
+	int broadcastPermission;					/* Socket opt to set permission to broadcast */
+	unsigned int sendStringLen;					/* Length of string to broadcast */
 
-	broadcastIP = "192.168.2.255";    /* First arg:  broadcast IP address */ 
-	broadcastPort = htons(2002);      /* Second arg:  broadcast port */
+	broadcastPort = htons(BPORTFORMANAGERS);	/* Broadcast port */
 
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
@@ -88,93 +86,89 @@ void *UdpBroadcastSenderTwo(void *arg){
 	}
 }
 
-void *ThreadMain(void *threadArgs){	
-    int clntSock;                   /* Socket descriptor for client connection */
+void *ThreadMainClient(void *threadArgs){	
+	int clntSock;                   /* Socket descriptor for client connection */
 
-    /* Guarantees that thread resources are deallocated upon return */
-    pthread_detach(pthread_self()); 
+	/* Guarantees that thread resources are deallocated upon return */
+	pthread_detach(pthread_self()); 
 
-    /* Extract socket file descriptor from argument */
-    clntSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
-    free(threadArgs);              /* Deallocate memory for argument */
+	/* Extract socket file descriptor from argument */
+	clntSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
+	free(threadArgs);              /* Deallocate memory for argument */
 
-    HandleTCPClient(clntSock);
-    return 0;
+	HandleTCPClient(clntSock);
+	return 0;
 }
 
-void *ThreadMainTwo(void *threadArgs){	
-    int clntSock;                   /* Socket descriptor for client connection */
+void *ThreadMainManager(void *threadArgs){	
+	int clntSock;                   /* Socket descriptor for client connection */
 
-    /* Guarantees that thread resources are deallocated upon return */
-    pthread_detach(pthread_self()); 
+	/* Guarantees that thread resources are deallocated upon return */
+	pthread_detach(pthread_self()); 
 
-    /* Extract socket file descriptor from argument */
-    clntSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
-    free(threadArgs);              /* Deallocate memory for argument */
+	/* Extract socket file descriptor from argument */
+	clntSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
+	free(threadArgs);              /* Deallocate memory for argument */
 
-    for (;;){
-    	HandleTCPClientTwo(clntSock);
-    	sleep(3);
-    }
-    return 0;
+	for (;;){
+		HandleTCPManages(clntSock);
+		sleep(3);
+	}
+	return 0;
 } 
 
-void *TcpConnectionOne(void *arg){
-    int servSock;                    /* Socket descriptor for server */
-    int clntSock;                    /* Socket descriptor for client */
-    unsigned short echoServPort;     /* Server port */
-    pthread_t threadID;              /* Thread ID from pthread_create() */
-    struct ThreadArgs *threadArgs;   /* Pointer to argument structure for thread */
+void *TcpConnectionClient(void *arg){
+	int servSock;                    /* Socket descriptor for server */
+	int clntSock;                    /* Socket descriptor for client */
+	unsigned short echoServPort;     /* Server port */
+	pthread_t threadID;              /* Thread ID from pthread_create() */
+	struct ThreadArgs *threadArgs;   /* Pointer to argument structure for thread */
 	
-    echoServPort = 2500;  /* First arg:  local port */
+	echoServPort = PORTFORCLIENTS;   /* Local port */
 
-    servSock = CreateTCPServerSocket(echoServPort);
+	servSock = CreateTCPServerSocket(echoServPort);
 
-    for (;;) /* run forever */
-    {
+	for (;;) /* run forever */
+	{
 	clntSock = AcceptTCPConnection(servSock);
 
-        /* Create separate memory for client argument */
-        if ((threadArgs = (struct ThreadArgs *) malloc(sizeof(struct ThreadArgs))) == NULL)
-            DieWithError("malloc() failed");
+		if ((threadArgs = (struct ThreadArgs *) malloc(sizeof(struct ThreadArgs))) == NULL)
+			DieWithError("malloc() failed");
 
-        threadArgs -> clntSock = clntSock;
+		threadArgs -> clntSock = clntSock;
 
-        /* Create client thread */
-        if (pthread_create(&threadID, NULL, ThreadMain, (void *) threadArgs) != 0)
-            DieWithError("pthread_create() failed");
-        
-        printf("Thread %ld\n ", (long int) threadID);
-    }
+		if (pthread_create(&threadID, NULL, ThreadMainClient, (void *) threadArgs) != 0)
+			DieWithError("pthread_create() failed");
+		
+		printf("Create thread to TCP connect with client, ID:\t%ld\n", (long int) threadID);
+	}
 }
 
-void *TcpConnectionTwo(void *arg){
-    int servSock;                    /* Socket descriptor for server */
-    int clntSock;                    /* Socket descriptor for client */
-    unsigned short echoServPort;     /* Server port */
-    pthread_t threadID;              /* Thread ID from pthread_create() */
-    struct ThreadArgs *threadArgs;   /* Pointer to argument structure for thread */
+void *TcpConnectionManager(void *arg){
+	int servSock;                    /* Socket descriptor for server */
+	int clntSock;                    /* Socket descriptor for client */
+	unsigned short echoServPort;     /* Server port */
+	pthread_t threadID;              /* Thread ID from pthread_create() */
+	struct ThreadArgs *threadArgs;   /* Pointer to argument structure for thread */
 	
-    echoServPort = 1500;  /* First arg:  local port */
+	echoServPort = PORTFORMANAGERS;  /* Local port */
 
-    servSock = CreateTCPServerSocket(echoServPort);
+	servSock = CreateTCPServerSocket(echoServPort);
 
-    for (;;) /* run forever */
-    {
+	for (;;) /* run forever */
+	{
 	clntSock = AcceptTCPConnection(servSock);
 
-        /* Create separate memory for client argument */
-        if ((threadArgs = (struct ThreadArgs *) malloc(sizeof(struct ThreadArgs))) == NULL)
-            DieWithError("malloc() failed");
+		if ((threadArgs = (struct ThreadArgs *) malloc(sizeof(struct ThreadArgs))) == NULL)
+			DieWithError("malloc() failed");
 
-        threadArgs -> clntSock = clntSock;
+		threadArgs -> clntSock = clntSock;
 
-        /* Create client thread */
-        if (pthread_create(&threadID, NULL, ThreadMainTwo, (void *) threadArgs) != 0)
-            DieWithError("pthread_create() failed");
-        
-        printf("Thread %ld\n ", (long int) threadID);
-    }
+		if (pthread_create(&threadID, NULL, ThreadMainManager, (void *) threadArgs) != 0)
+			DieWithError("pthread_create() failed");
+		
+		printf("Create thread to TCP connect with manager, ID:\t%ld\n", (long int) threadID);
+	}
 }
 
 int main(int argc, char *argv[]){
@@ -183,11 +177,21 @@ int main(int argc, char *argv[]){
 	pthread_t threads[count]; /* Thread descriptor */
 	void *status[count];      /* Status of thread */
 
-	pthread_create(&threads[1], NULL, UdpBroadcastSenderOne, 0); /* Start UDP broadcast sender */
-	pthread_create(&threads[2], NULL, UdpBroadcastSenderTwo, 0); /* Start UDP broadcast sender */
+	broadcastIP = (char *) malloc(sizeof(char)*15);
 
-	pthread_create(&threads[3], NULL, TcpConnectionOne, 0);	  /* Start TCP connections listener*/
-	pthread_create(&threads[4], NULL, TcpConnectionTwo, 0);	  /* Start TCP connections listener*/
+	if (argc < 2){
+		printf("Syntax: <BroadcastIP>\n");
+		return 1;	
+	}
+
+	printf("Broadcast IP: %s\n", argv[1]);
+	broadcastIP = argv[1];
+
+	pthread_create(&threads[1], NULL, UdpBroadcastSenderForClient, 0);  /* Start UDP broadcast sender */
+	pthread_create(&threads[2], NULL, UdpBroadcastSenderForManager, 0); /* Start UDP broadcast sender */
+
+	pthread_create(&threads[3], NULL, TcpConnectionClient, 0);	  /* Start TCP connections listener*/
+	pthread_create(&threads[4], NULL, TcpConnectionManager, 0);	  /* Start TCP connections listener*/
 
 	pthread_join(threads[1], &status[1]);  /* Wait UDP broadcast sender */                   
 	pthread_join(threads[2], &status[2]);  /* Wait TCP connections listener*/	
@@ -195,4 +199,3 @@ int main(int argc, char *argv[]){
 	pthread_join(threads[3], &status[3]);  /* Wait UDP broadcast sender */                   
 	pthread_join(threads[4], &status[4]);  /* Wait TCP connections listener*/	
 }
-

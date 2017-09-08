@@ -7,6 +7,6 @@
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 void HandleTCPClient(int clntSocket);   /* TCP client handling function */
-void HandleTCPClientTwo(int clntSocket);   /* TCP client handling function */
+void HandleTCPManager(int clntSocket);   /* TCP client handling function */
 int CreateTCPServerSocket(unsigned short port); /* Create TCP server socket */
 int AcceptTCPConnection(int servSock);  /* Accept TCP connection request */

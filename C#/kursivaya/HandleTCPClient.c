@@ -1,21 +1,20 @@
-#include <stdio.h>      /* for printf() and fprintf() */
-#include <sys/socket.h> /* for recv() and send() */
-#include <unistd.h>     /* for close() */
+#include <stdio.h>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <sys/ipc.h>
 #include <string.h>
-#include <stdlib.h>     /* for atoi() and exit() */
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/msg.h>
 
-
-#define RCVBUFSIZE 10   /* Size of receive buffer */
-#define MSGSZ     10
+#define RCVBUFSIZE 10	/* Size of receive buffer */
+#define MSGSZ      10	/* Size of text in MSG*/
+#define KEY        10	/* Key for msgget*/
 
 typedef struct msgbuf {
 	long    mtype;
 	char    mtext[MSGSZ];
 } message_buf;
-
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
@@ -23,34 +22,26 @@ void HandleTCPClient(int clntSocket)
 {
 	char echoBuffer[RCVBUFSIZE];        /* Buffer for echo string */
 	int recvMsgSize;                    /* Size of received message */
-	int readfd, writefd;
+	int msqid;							/* MSG descriptor */
+	int msgflg = IPC_CREAT | 0666;		/* MSG flags */
+	key_t key = KEY;					/* Key for MSG */
+	message_buf sbuf;					/* Struct to MSG*/
+	size_t buf_length;					/* Size of message in MSG*/
 
-	int msqid;
-	int msgflg = IPC_CREAT | 0666;
-	key_t key;
-	message_buf sbuf;
-	size_t buf_length;
 
-	key = 10;
-
-	if ((msqid = msgget(key, msgflg )) < 0) {
+	if ((msqid = msgget(key, msgflg )) < 0){
 		perror("msgget");
 		exit(1);
-	}
-	else 
-		printf("msgget: msgget succeeded: msqid = %d\n", msqid);
+	} else
+		printf("Msgget:\tmsgget succeeded:\tmsqid = %d\n", msqid);
 
 	sbuf.mtype = 1;
 
-
-	/* Receive message from client */
 	if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
 		DieWithError("recv() failed");
 
-	/* Send received string and receive again until end of transmission */
-	while (recvMsgSize > 0)      /* zero indicates end of transmission */
-	{   
-
+	while (recvMsgSize > 0)		/* zero indicates end of transmission */
+	{
 		strcpy(sbuf.mtext, echoBuffer);
 		buf_length = sizeof(struct msgbuf) - sizeof(long);
 
@@ -58,16 +49,11 @@ void HandleTCPClient(int clntSocket)
 			printf ("%d, %ld, %s, %ld\n", msqid, sbuf.mtype, sbuf.mtext, buf_length);
 			perror("msgsnd");
 			exit(1);
-		} 
-		else
-			printf("Write to MSG: %s\n", sbuf.mtext);
+		} else
+			printf("Write to MSG:\t%s\t size\t%ld\n", sbuf.mtext, sizeof(sbuf.mtext));
 
-		/* See if there is more data to receive */
 		if ((recvMsgSize = recv(clntSocket, echoBuffer, RCVBUFSIZE, 0)) < 0)
-			DieWithError("recv() failed");
-
-		
+			DieWithError("recv() failed");		
 	}
-
-	close(clntSocket);    /* Close client socket */
+	close(clntSocket);
 }

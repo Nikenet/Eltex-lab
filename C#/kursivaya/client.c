@@ -1,5 +1,3 @@
-/*Клиент 1го типа*/
-
 #include <stdio.h>      /* for printf() and fprintf() */
 #include <sys/socket.h> /* for socket(), connect(), sendto(), and recvfrom() */
 #include <arpa/inet.h>  /* for sockaddr_in and inet_addr() */
@@ -9,14 +7,17 @@
 #include <string.h>
 #include <time.h>
 
-#define MAXRECVSTRING 255  /* Longest string to receive */
+#define MAXRECVSTRING     255   /* Longest string to receive */
+#define BPORTFORCLIENTS   2001  /* Broadcast port for clients*/
+#define PORTFORCLIENTS    2500  /* Port to TCP connections for clients*/
+#define STRNGLEN          69    /* Count of char that needs to generate random string*/
 
 void DieWithError(char *errorMessage);  /* External error handling function */
 
 /* Random string generator */
 char *randstring(int length) {    
     char *string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
-    size_t stringLen = 26*2+10+7;        
+    size_t stringLen = STRNGLEN;        
     char *randomString;
 
     randomString = malloc(sizeof(char) * (length +1));
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
 
-	broadcastPort = htons(2001);
+	broadcastPort = htons(BPORTFORCLIENTS);
 
 	memset(&broadcastAddr, 0, sizeof(broadcastAddr));   /* Zero out structure */
 	broadcastAddr.sin_family = AF_INET;                 /* Internet address family */
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 	close(sock);
 
 	servIP = inet_ntoa(src_addr.sin_addr);    /* server IP address (dotted quad) */
-	src_port = 2500;			              /* Use given port */
+	src_port = PORTFORCLIENTS;			      /* Use given port */
 
 	/* Create a reliable, stream socket using TCP */
 	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)

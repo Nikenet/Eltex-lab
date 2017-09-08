@@ -1,5 +1,3 @@
-/* Клиент 2го типа */
-
 #include <stdio.h>      /* for printf() and fprintf() */
 #include <sys/socket.h> /* for socket(), connect(), sendto(), and recvfrom() */
 #include <arpa/inet.h>  /* for sockaddr_in and inet_addr() */
@@ -8,8 +6,11 @@
 #include <unistd.h>     /* for close() */
 #include <string.h>
 
-#define MAXRECVSTRING 100  /* Longest string to receive */
-#define RCVBUFSIZE 10      /* Size of receive buffer */
+#define MAXRECVSTRING     100   /* Longest string to receive */
+#define RCVBUFSIZE        10    /* Size of receive buffer */
+#define BPORTFORMANAGERS  2002  /* Broadcast port for managers*/
+#define PORTFORMANAGERS   1500  /* Port to TCP connections for managers*/
+
 
 void DieWithError(char *errorMessage);  /* External error handling function */
 
@@ -28,13 +29,13 @@ int main(int argc, char *argv[])
 	unsigned short src_port;     	  /* Echo server port */
 	char *servIP;                     /* Server IP address (dotted quad) */
 	char echoBuffer[RCVBUFSIZE];      /* Buffer for echo string */
-	int bytesRcvd;    /* Bytes read in single recv() and total bytes read */
+	int bytesRcvd;					  /* Bytes read in single recv() and total bytes read */
 
 	recvString = (char *) malloc(sizeof(char) * MAXRECVSTRING);
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
 
-	broadcastPort = htons(2002);
+	broadcastPort = htons(BPORTFORMANAGERS);
 
 	memset(&broadcastAddr, 0, sizeof(broadcastAddr));   /* Zero out structure */
 	broadcastAddr.sin_family = AF_INET;                 /* Internet address family */
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
 	close(sock);
 
 	servIP = inet_ntoa(src_addr.sin_addr);    /* server IP address (dotted quad) */
-	src_port = 1500;			              /* Use given port */
+	src_port = PORTFORMANAGERS;			      /* Use given port */
 
 	/* Create a reliable, stream socket using TCP */
 	if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
