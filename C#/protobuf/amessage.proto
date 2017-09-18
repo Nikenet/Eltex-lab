@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+message Submessage {
+  required string value=1;
+}
+
+message DMessage {
+  required Submessage a=1;
+  optional Submessage b=2;
+}

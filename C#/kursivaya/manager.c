@@ -5,9 +5,11 @@
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
 #include <string.h>
+#include "message.pb-c.h"
 
+#define MAX_MSG_SIZE	  14
 #define MAXRECVSTRING     100   /* Longest string to receive */
-#define RCVBUFSIZE        10    /* Size of receive buffer */
+#define RCVBUFSIZE        14    /* Size of receive buffer */
 #define BPORTFORMANAGERS  2002  /* Broadcast port for managers*/
 #define PORTFORMANAGERS   1500  /* Port to TCP connections for managers*/
 
@@ -15,20 +17,23 @@
 void DieWithError(char *errorMessage);  /* External error handling function */
 
 int main(int argc, char *argv[])
-{
+{	
+	DMessage   *msg;         // DMessage using submessages
+	Submessage *sub1;	   // Submessages
+
 	int sock;                         /* Socket */
 
 	struct sockaddr_in broadcastAddr; /* Broadcast Address */
 	unsigned short broadcastPort;     /* Broadcast port */
 	char *recvString; /* Buffer for received string */
-	int recvStringLen;                /* Length of received string */
+	int recvStringLen;                /* Length of received string */	
 
 	int i=0;
+	uint8_t buf[MAX_MSG_SIZE]; // Input data container for bytes
 
 	struct sockaddr_in src_addr;	  /* Echo server address */
 	unsigned short src_port;     	  /* Echo server port */
 	char *servIP;                     /* Server IP address (dotted quad) */
-	char echoBuffer[RCVBUFSIZE];      /* Buffer for echo string */
 	int bytesRcvd;					  /* Bytes read in single recv() and total bytes read */
 
 	recvString = (char *) malloc(sizeof(char) * MAXRECVSTRING);
@@ -70,22 +75,27 @@ int main(int argc, char *argv[])
 	src_addr.sin_port        = htons(src_port); 	/* Server port */
 
 	if (connect(sock, (struct sockaddr *) &src_addr, sizeof(src_addr)) < 0)
-		DieWithError("connect() failed");	
+		DieWithError("connect() failed");
 
-	bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE, 0);
-
+	bytesRcvd = recv(sock, buf, RCVBUFSIZE, 0);
+	
 	printf("Start TCP recieving\n");
 
 	while (bytesRcvd > 0){
 
-		++i;
+		msg = dmessage__unpack(NULL, RCVBUFSIZE, buf); // Deserialize the serialized input
+		if (msg == NULL){ // Something failed
+		    fprintf(stderr,"error unpacking incoming message\n");
+		}
+		sub1 = msg->a;
 
-		if ((bytesRcvd = recv(sock, echoBuffer, RCVBUFSIZE, 0)) < 0)
-			DieWithError("recv() failed");		
+		++i;		
+		printf("[%d]\tTCP recieved:\t%p\n", i, sub1->value);
 
-		printf("[%d]\tTCP recieved:\t%s\n", i, echoBuffer);
-		echoBuffer[bytesRcvd] = '\0';  /* Terminate the string! */		
+		if ((bytesRcvd = recv(sock, buf, RCVBUFSIZE, 0)) < 0)
+			DieWithError("recv() failed");
+
+		dmessage__free_unpacked(msg,NULL);
 	}
-
 	close(sock);
 }

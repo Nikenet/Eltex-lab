@@ -13,6 +13,7 @@
 #define BPORTFORMANAGERS  2002  /* Broadcast port for managers*/
 #define PORTFORCLIENTS    2500  /* Port to TCP connections for clients*/
 #define PORTFORMANAGERS   1500  /* Port to TCP connections for managers*/
+#define MAX_MSG_SIZE 4096
 
 char *broadcastIP;
 

@@ -6,11 +6,13 @@
 #include <unistd.h>     /* for close() */
 #include <string.h>
 #include <time.h>
+#include "message.pb-c.h" /* ProtoBuf generated header*/
 
 #define MAXRECVSTRING     255   /* Longest string to receive */
 #define BPORTFORCLIENTS   2001  /* Broadcast port for clients*/
 #define PORTFORCLIENTS    2500  /* Port to TCP connections for clients*/
 #define STRNGLEN          69    /* Count of char that needs to generate random string*/
+#define STRNGPROTOBUF     4096
 
 void DieWithError(char *errorMessage);  /* External error handling function */
 
@@ -45,14 +47,15 @@ int main(int argc, char *argv[])
 	unsigned short broadcastPort;     /* Broadcast port */
 	char recvString[MAXRECVSTRING+1]; /* Buffer for received string */
 	int recvStringLen;                /* Length of received string */
-
 	int i=0;
 
 	struct sockaddr_in src_addr;	  /* Echo server address */
 	unsigned short src_port;     	  /* Echo server port */
 	char *servIP;                     /* Server IP address (dotted quad) */
-	char *echoString;                 /* String to send to echo server */
-	unsigned int echoStringLen;       /* Length of string to echo */
+
+	void *buf;
+	unsigned len;
+
 
 	if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 		DieWithError("socket() failed");
@@ -91,6 +94,11 @@ int main(int argc, char *argv[])
 	src_addr.sin_addr.s_addr = inet_addr(servIP);   /* Server IP address */
 	src_addr.sin_port        = htons(src_port); 	/* Server port */
 
+	/* serialize message */
+
+	DMessage msg    = DMESSAGE__INIT;   // DMESSAGE
+	Submessage sub1 = SUBMESSAGE__INIT; // SUBMESSAGE A
+
 	if (connect(sock, (struct sockaddr *) &src_addr, sizeof(src_addr)) < 0)
 		DieWithError("connect() failed");	
 
@@ -98,14 +106,19 @@ int main(int argc, char *argv[])
 	for (;;){
 
 		++i;
-		echoString = randstring(10);             
-		echoStringLen = strlen(echoString);             
-
-		printf("[%d]\tTCP sended:\t%s\n", i, echoString);
+		sub1.value = randstring(10); 
+		msg.a = &sub1;               // Point msg.a to sub1 data
+  
+		len = dmessage__get_packed_size (&msg); // This is the calculated packing length
+		buf = malloc (len);                     // Allocate memory
+		dmessage__pack (&msg, buf);             // Pack msg, including submessages
 		
-		if (send(sock, echoString, echoStringLen, 0) != echoStringLen)
+		if (send(sock, buf, len, 0) != len)
 			DieWithError("send() sent a different number of bytes than expected");	                 
 
+		printf("[%d]\tTCP sended:\t%p\t%s\t%d\n", i, buf, sub1.value, len);
+
+		free(buf);
 		sleep(3);
 	}	
 }
