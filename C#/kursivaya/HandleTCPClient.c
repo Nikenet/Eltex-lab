@@ -8,15 +8,11 @@
 #include <sys/msg.h>
 #include <stdint.h>
 #include "message.pb-c.h"
+#include "msg.h"
+
 
 #define RCVBUFSIZE 14	/* Size of receive buffer */
-#define MSGSZ      14	/* Size of text in MSG*/
-#define KEY        15	/* Key for msgget*/
-
-typedef struct msgbuf {
-	long    mtype;
-	char  	mtext[MSGSZ];
-} message_buf;
+#define KEY        20	/* Key for msgget*/
 
 void DieWithError(char *errorMessage);  /* Error handling function */
 
@@ -29,7 +25,7 @@ void HandleTCPClient(int clntSocket)
 	int msqid;							/* MSG descriptor */
 	int msgflg = IPC_CREAT | 0666;		/* MSG flags */
 	key_t key = KEY;					/* Key for MSG */
-	message_buf sbuf;					/* Struct to MSG*/
+	struct msgbuf sbuf;					/* Struct to MSG*/
 	size_t buf_length;					/* Size of message in MSG*/
 	uint8_t buf[MSGSZ];
 
@@ -49,17 +45,17 @@ void HandleTCPClient(int clntSocket)
 		msg = dmessage__unpack(NULL,RCVBUFSIZE,buf);
 		if (msg == NULL) // Something failed
 	    	fprintf(stderr,"error unpacking incoming message\n");	
-		sub1 = msg->a;
 
+		sub1 = msg->a;
 		strcpy(sbuf.mtext, sub1->value);
 		buf_length = sizeof(struct msgbuf) - sizeof(long);
 
-		if (msgsnd(msqid, &sbuf, buf_length, 0) < 0) {
+		if (msgsnd(msqid, &sbuf, MSGSZ, 0) < 0) {
 			printf ("%d, %ld, %s, %ld\n", msqid, sbuf.mtype, sbuf.mtext, buf_length);
 			perror("msgsnd");
 			exit(1);
 		} else
-			printf("Write to MSG:\t\t%s\n", sub1->value);
+			printf("Write to MSG:\t\t%s\t\n", sub1->value);
 
 		if ((recvMsgSize = recv(clntSocket, buf, RCVBUFSIZE, 0)) < 0)
 			DieWithError("recv() failed");

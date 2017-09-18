@@ -9,7 +9,7 @@
 
 #define MAX_MSG_SIZE	  14
 #define MAXRECVSTRING     100   /* Longest string to receive */
-#define RCVBUFSIZE        14    /* Size of receive buffer */
+#define RCVBUFSIZE        14   /* Size of receive buffer */
 #define BPORTFORMANAGERS  2002  /* Broadcast port for managers*/
 #define PORTFORMANAGERS   1500  /* Port to TCP connections for managers*/
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 		sub1 = msg->a;
 
 		++i;		
-		printf("[%d]\tTCP recieved:\t%p\n", i, sub1->value);
+		printf("[%d]\tTCP recieved:\t%s\t%p\n", i, sub1->value, buf);
 
 		if ((bytesRcvd = recv(sock, buf, RCVBUFSIZE, 0)) < 0)
 			DieWithError("recv() failed");
