@@ -1,0 +1,20 @@
+#iptables configuration
+
+syntax:
+
+iptables -t filter -A INPUT(OUTPUT)
+
+-F //отчищение всех правил
+
+iptables-save/restore > iptables
+
+// -m особые правила
+
+:OUTPUT -//-
+-A INPUT -i eth0 -p tcp -m tcp --dport 80 -j ACCEPT --tcp-flags SYB,ACK,RST SYN 
+-A INPUT -i eth0 -p tcp -m tcp -j DROP --tcp-flags SYB,ACK,RST SYN
+
+//ttl
+
+-t mangle -A POSTROUTING -j TTL --ttl-set 65
+
