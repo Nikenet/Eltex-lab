@@ -12,7 +12,7 @@
 #define BINDPORT 2000
 #define HEADESIZE (sizeof(struct iphdr)+sizeof(struct udphdr))
 
-int main (int argc, char const *argv[])
+int main (int argc, char *argv[])
 {	
 	if( argc < 2){
 		printf("Syntax: <ip address to bind>\n");
@@ -20,26 +20,26 @@ int main (int argc, char const *argv[])
 	}
 
 	/* Creating raw socket */ 
-	int s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW);
+	int s = socket (AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if(s == -1){
 		perror("Failed to create raw socket");
 		exit(1);
 	}
 
+	setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, "lo", 2);
+
 	struct sockaddr_in sin;
-	char source_ip[32];
 	char tmp[TMPSIZE];
     ssize_t msglen;
 	socklen_t socklen;
 
-	memset (source_ip, 0x00, 32);
 	memset (tmp, 0x00, TMPSIZE);
-	strcpy(source_ip , argv[1]);
+	memset (&sin, 0x00, sizeof(struct sockaddr_in));
 
 	/* Needed to bind */
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(BINDPORT);
-	sin.sin_addr.s_addr = inet_addr(source_ip);
+	sin.sin_addr.s_addr = inet_addr(argv[1]);
 	socklen = (socklen_t) sizeof(sin);
 
     /* Bind to port*/
@@ -57,9 +57,8 @@ int main (int argc, char const *argv[])
 		return 1;
 	}
 
-	tmp[msglen -1] = '\0';
-	printf("Recieved: %s\n", tmp);
-    printf("Exitting\n");
+	tmp[msglen] = '\0';
+	printf("Data: %s\n", tmp+HEADESIZE);
 
 	return 0;
 }

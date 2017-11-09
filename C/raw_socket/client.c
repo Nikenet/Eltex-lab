@@ -9,7 +9,7 @@
 #include<arpa/inet.h>
 
 #define SPORT 6666
-#define	DPORT 1500
+#define	DPORT 2000
 
 unsigned short csum(unsigned short *ptr,int nbytes) 
 {
@@ -48,6 +48,8 @@ int main (int argc, char const *argv[])
 		perror("Failed to create raw socket");
 		exit(1);
 	}
+
+	setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, "lo", 2);
 
 	char datagram[4096] , source_ip[32] , dest_ip[32], *data;	 
 
