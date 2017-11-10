@@ -1,7 +1,9 @@
 #include<stdio.h>
 #include<string.h>
 #include<sys/socket.h>
+#include<sys/types.h>
 #include<stdlib.h>
+#include<unistd.h>
 #include<errno.h>
 #include<netinet/in.h>
 #include<netinet/udp.h>
@@ -10,6 +12,10 @@
 
 #define SPORT 6666
 #define	DPORT 2000
+#define TMPSIZE 1024
+#define BINDPORT 6666
+#define HEADESIZE (sizeof(struct iphdr)+sizeof(struct udphdr))
+#define INTERFACE "lo"
 
 unsigned short csum(unsigned short *ptr,int nbytes) 
 {
@@ -35,12 +41,7 @@ unsigned short csum(unsigned short *ptr,int nbytes)
 	return(answer);
 }
 
-int main (int argc, char const *argv[])
-{
-	if( argc < 3){
-		printf("Syntax: <source ip> <destination ip>\n");
-		exit(0);
-	}
+int snd (char source_ip[32], char dest_ip[32]){
 
 	/* Creating raw socket */ 
 	int s = socket (AF_INET, SOCK_RAW, IPPROTO_RAW);
@@ -51,11 +52,9 @@ int main (int argc, char const *argv[])
 
 	setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, "lo", 2);
 
-	char datagram[4096] , source_ip[32] , dest_ip[32], *data;	 
+	char datagram[4096], *data;
 
 	memset (datagram, 0x00, 4096);
-	memset (source_ip, 0x00, 32);
-	memset (dest_ip, 0x00, 32);	 
 
 	struct iphdr *iph = (struct iphdr *) datagram;
 	struct udphdr *udph = (struct udphdr *) (datagram + sizeof (struct ip));	 
@@ -64,9 +63,6 @@ int main (int argc, char const *argv[])
 	/* Part of data */
 	data = datagram + sizeof(struct iphdr) + sizeof(struct udphdr);
 	strcpy(data , "hello_from_raw_socket");
-	
-	strcpy(source_ip , argv[1]);
-	strcpy(dest_ip, argv[2]);
 
 	/* Kernel provide Ethernet header for us */
 	sin.sin_family = AF_INET;
@@ -102,5 +98,69 @@ int main (int argc, char const *argv[])
 	else
 		printf ("Sended message: %s, from %s, to %s\n", data, source_ip, dest_ip);
 
+	close(s);
+
 	return 0;
+}
+
+int rcv(char ip[32]){
+
+	/* Creating raw socket */ 
+	int s = socket (AF_INET, SOCK_RAW, IPPROTO_UDP);
+	if(s == -1){
+		perror("Failed to create raw socket");
+		exit(1);
+	}
+
+	setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, INTERFACE, 2);
+
+	struct sockaddr_in addr;
+	struct sockaddr_in sin;
+	char tmp[TMPSIZE];
+	ssize_t msglen;
+	socklen_t socklen;
+
+	memset (tmp, 0x00, TMPSIZE);
+	memset (&sin, 0x00, sizeof(struct sockaddr_in));
+
+	/* Needed to bind */
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(BINDPORT);
+	sin.sin_addr.s_addr = inet_addr(ip);
+	socklen = (socklen_t) sizeof(sin);
+
+	/* Bind to port*/
+	printf("Binding...\n");	
+	int b = bind(s, (struct sockaddr*)&sin, socklen);
+	if ( b == -1){
+		perror("Cannot bind");
+		return 1;
+	}
+	/* Start to recieve*/
+	printf("Recieving...\n");
+	msglen = recvfrom(s, tmp, TMPSIZE, 0, (struct sockaddr *)&addr, &socklen);
+	if (msglen == -1){
+		perror("Cannot recieve");
+		return 1;
+	}
+
+	tmp[msglen] = '\0';
+	char *msg = (char *) malloc(sizeof(char)*sizeof(tmp+HEADESIZE));
+	printf("Data: %s\n", msg);
+
+	free(msg);
+	close(s);
+
+	return 0;
+}
+
+int main (int argc, char *argv[])
+{
+	if( argc < 3){
+		printf("Syntax: <source ip> <destination ip>\n");
+		exit(0);
+	}
+
+	snd(argv[1], argv[2]);
+	rcv(argv[2]);	
 }
