@@ -130,25 +130,20 @@ int rcv(char ip[32]){
 	socklen = (socklen_t) sizeof(sin);
 
 	/* Bind to port*/
-	printf("Binding...\n");	
 	int b = bind(s, (struct sockaddr*)&sin, socklen);
 	if ( b == -1){
 		perror("Cannot bind");
 		return 1;
 	}
+	
 	/* Start to recieve*/
-	printf("Recieving...\n");
 	msglen = recvfrom(s, tmp, TMPSIZE, 0, (struct sockaddr *)&addr, &socklen);
 	if (msglen == -1){
 		perror("Cannot recieve");
 		return 1;
 	}
 
-	tmp[msglen] = '\0';
-	char *msg = (char *) malloc(sizeof(char)*sizeof(tmp+HEADESIZE));
-	printf("Data: %s\n", msg);
-
-	free(msg);
+	printf("Recieved message: %s\n", tmp+HEADESIZE);
 	close(s);
 
 	return 0;

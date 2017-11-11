@@ -85,6 +85,7 @@ char * raw_recv(char ip[32]){
 
 	tmp[msglen] = '\0';
 	char *msg = (char *) malloc(sizeof(char)*sizeof(tmp+HEADESIZE));
+	strcpy(msg, tmp+HEADESIZE);
 	printf("Data: %s\n", msg);
 	
 	close(s);
@@ -162,6 +163,9 @@ int main (int argc, char *argv[])
 		exit(0);
 	}
 
-	char *msg = raw_recv(argv[1]);	
+	char *msg;
+	msg = (char *) malloc(sizeof(char)*25);
+	msg = raw_recv(argv[1]);
+	sleep(1);
 	raw_send(argv[1], argv[2], msg);	
 }
