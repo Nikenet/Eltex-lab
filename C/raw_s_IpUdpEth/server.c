@@ -11,10 +11,10 @@
 #include<arpa/inet.h>
 
 #define TMPSIZE 1024
-#define BINDPORT 2000
+#define BINDPORT 5000
 #define HEADESIZE (sizeof(struct iphdr)+sizeof(struct udphdr))
 #define INTERFACE "enp6s0"
-#define SPORT 2000
+#define SPORT 5000
 #define	DPORT 6666
 
 int main(int argc, char const *argv[])
