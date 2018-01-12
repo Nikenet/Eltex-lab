@@ -33,11 +33,13 @@
 char *rngip[MAXCOUNTGROUPIP];
 int rngiplen = 0, rngipcount = 0;
 
+/* Struct with sockets file descriptors */
 struct arg_struct {
 	int sr;
 	int ss;
 };
 
+/* Function, needs to redefenition byte IP to string representation */
 static char *ipToStr (unsigned int ip, char *buffer){
 
 	sprintf (buffer, "%d.%d.%d.%d",
@@ -51,6 +53,7 @@ static char *ipToStr (unsigned int ip, char *buffer){
 	return buffer;
 }
 
+/* Calculate strings hash */
 const unsigned long hash(const char *str) {
 	unsigned long hash = 5381;  
 	int c;
@@ -60,6 +63,7 @@ const unsigned long hash(const char *str) {
 	return hash;
 }
 
+/* Function calculate header checksum */
 unsigned short csum(unsigned short *ptr,int nbytes){
 	register long sum;
 	unsigned short oddbyte;
@@ -83,6 +87,7 @@ unsigned short csum(unsigned short *ptr,int nbytes){
 	return(answer);
 }
 
+/* Generate IGMP report packet*/
 int igmpv2_report(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 
 	char datagram[SIZEOFDATAGRAM];
@@ -131,6 +136,7 @@ int igmpv2_report(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 	return 0;
 }
 
+/* Generate IGMP leave packet*/
 int igmpv2_leave(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 
 	char datagram[SIZEOFDATAGRAM];
@@ -153,7 +159,7 @@ int igmpv2_leave(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 	iph->ttl = TTL;
 	iph->protocol = IPPROTO_IGMP;	
 	iph->daddr = inet_addr(destIP);
-	iph->saddr = inet_addr(IP);
+	//iph->saddr = inet_addr(IP);
 	iph->check = 0;
 
 	iph->check = csum ((unsigned short *)datagram, iph->tot_len);
@@ -196,10 +202,10 @@ int listener(int ss, int sr){
 
 	while(1){
 
-		recvfrom(sr, buf, 100, 0, 0, 0);
+		if ((recvfrom(sr, buf, 100, 0, 0, 0)) == -1)
+			perror("Recv failed");
 
 		/* Destruct packet */
-
 		if (igmph -> type == 0x11){
 			
 			if (igmph -> group != 0x00){
@@ -208,8 +214,6 @@ int listener(int ss, int sr){
 				printf("from %s ", ipToStr(iph->saddr, buftoip));
 				printf("\n        group %s ",ipToStr(igmph->group, buftoip));
 				printf("MaxRespTime %d\n", igmph->code);
-				
-
 
 				/* Send report to specific group */
 				for (int j = 0; j < rngiplen; ++j){					
@@ -218,11 +222,13 @@ int listener(int ss, int sr){
 						srand (time(NULL));
 						random = rand() % igmph->code;
 						printf("CLIENT: [*] to group %s sets delay value in %d second\n",
-						ipToStr(igmph->group, buftoip), random);
+						ipToStr(igmph->group, buftoip), random/10);
 						sleep(random/10);
 						igmpv2_report(ss, rngip[j], rngip[j]);	
 					}				
 				}
+
+				printf("CLIENT: Whaiting IGMP Query\n");
 
 				memset(buf, 0x00, 100);
 				return 0;
@@ -241,41 +247,39 @@ int listener(int ss, int sr){
 
 					random = rand() % igmph->code;
 					timer[j] = random / 10;
-					printf("CLIENT: [%d] to group %s sets delay value in %d second\n",
-							j, rngip[j], timer[j]);
+					if (hash(rngip[j]) != hash("0.0.0.0"))
+						printf("CLIENT: [%d] to group %s sets delay value in %d second\n",
+								j, rngip[j], timer[j]);
 					delaycount++;					
 				}
 
 				/* Send report to all actual group */
-				for(int i = 0; i <= igmph->code; ++i){
-
+				for(int i = 0; i <= igmph->code/10; ++i){
 					for(int j = 0; j < rngiplen; ++j){
 						recvcount++;
 						if (hash(rngip[j]) != hash("0.0.0.0")){
-							if(timer[j] == i)
-								igmpv2_report(ss, rngip[j], rngip[j]);								
+								if(timer[j] == i){
+								igmpv2_report(ss, rngip[j], rngip[j]);
+							}							
 							
 						}
 					}
 
-					if (recvcount != delaycount)
+
 						sleep(1);
-					else
-						break;
+
 				}
 
-				printf("CLIENT: All report recieved, whaiting IGMP Query\n");
+				printf("CLIENT: Whaiting IGMP Query\n");
 
 				memset(buf, 0x00, 100);
 				return 0;
 			}				
 		}
 	}
-
-	/* If not retuned type of IGMP packet */
-	return -1;
 }
 
+/* Parse stdin (add, del)*/
 void *commands(void *arg){
 
 	int socket = *(int*)arg;
@@ -359,7 +363,7 @@ int main(int argc, char **argv){
 				case 'h':
 					printf("\nOptions:\n");
 					printf("\t-i\tName of ethernet interface\n");
-					printf("\t-a\tRange of IP addresses\n\n");
+					printf("\t-a\tRange of IP addresses <0.0.0.0 or 0.0.0.0-255>\n\n");
 					printf("\tadd\tInput IP address of group\n");
 					printf("\tdel\tDel IP address of group\n\n");
 					printf("\t-h\tOpen this page\n");
@@ -411,6 +415,7 @@ int main(int argc, char **argv){
 			close(args -> sr);
 		}
 
+		/* Parse range of ip (flag -a)*/
 		char *ins = strtok(ip, ".");
 			
 		if (ins != NULL){
