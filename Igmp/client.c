@@ -19,11 +19,11 @@
 #include <unistd.h>
 #include <net/if.h>
 #include <time.h>
+#include <sys/ioctl.h>
 
 #define SIZEOFIP 32
 #define SIZEOFDATAGRAM 100
 #define TTL 1
-#define IP "192.168.2.6"
 #define MAXCOUNTGROUPIP 500
 #define ADD 193486030
 #define	DEL 193489338
@@ -31,6 +31,7 @@
 
 /* Massive of IP group address */
 char *rngip[MAXCOUNTGROUPIP];
+char *interface = NULL;	
 int rngiplen = 0, rngipcount = 0;
 
 /* Struct with sockets file descriptors */
@@ -97,6 +98,15 @@ int igmpv2_report(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 	struct igmphdr *igmph = (struct igmphdr *) (datagram + sizeof(struct ip));
 	struct sockaddr_in sin;
 
+	/* To get IP of the interface */
+	struct ifreq if_ip;
+	struct sockaddr_in* ipaddr = (struct sockaddr_in*)&if_ip.ifr_addr;
+
+	memset(&if_ip, 0, sizeof(struct ifreq));
+	strncpy(if_ip.ifr_name, interface, IFNAMSIZ-1);
+	if (ioctl(sock, SIOCGIFADDR, &if_ip) < 0)
+		perror("SIOCGIFADDR");
+
 	/* Kernel provide Ethernet header for us */
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = inet_addr(destIP);
@@ -108,9 +118,9 @@ int igmpv2_report(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 	iph->tot_len = sizeof (struct iphdr) + sizeof(struct igmphdr);
 	iph->frag_off = 0;
 	iph->ttl = TTL;
-	iph->protocol = IPPROTO_IGMP;	
+	iph->protocol = IPPROTO_IGMP;
+	iph->saddr = iph->saddr = inet_addr(inet_ntoa(ipaddr->sin_addr));;
 	iph->daddr = inet_addr(destIP);
-	iph->saddr = inet_addr(IP);
 	iph->check = 0;
 
 	iph->check = csum ((unsigned short *)datagram, iph->tot_len);
@@ -146,6 +156,15 @@ int igmpv2_leave(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 	struct igmphdr *igmph = (struct igmphdr *) (datagram + sizeof(struct ip));
 	struct sockaddr_in sin;
 
+	/* To get IP of the interface */
+	struct ifreq if_ip;
+	struct sockaddr_in* ipaddr = (struct sockaddr_in*)&if_ip.ifr_addr;
+
+	memset(&if_ip, 0, sizeof(struct ifreq));
+	strncpy(if_ip.ifr_name, interface, IFNAMSIZ-1);
+	if (ioctl(sock, SIOCGIFADDR, &if_ip) < 0)
+		perror("SIOCGIFADDR");
+
 	/* Kernel provide Ethernet header for us */
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = inet_addr(destIP);
@@ -159,7 +178,7 @@ int igmpv2_leave(int sock, char destIP[SIZEOFIP], char groupIP[SIZEOFIP]){
 	iph->ttl = TTL;
 	iph->protocol = IPPROTO_IGMP;	
 	iph->daddr = inet_addr(destIP);
-	//iph->saddr = inet_addr(IP);
+	iph->saddr = inet_addr(inet_ntoa(ipaddr->sin_addr));
 	iph->check = 0;
 
 	iph->check = csum ((unsigned short *)datagram, iph->tot_len);
@@ -332,8 +351,7 @@ int main(int argc, char **argv){
 	pthread_t threads;
 
 	char *ip = NULL;
-	char *interface = NULL;	
-
+	
 	char *mip1 = NULL;
 	char *mip2 = NULL;
 	char *mip3 = NULL;
@@ -342,9 +360,8 @@ int main(int argc, char **argv){
 	char *fts1 = NULL;
 	char *fts2 = NULL;
 
-	struct arg_struct *args = malloc(sizeof(struct arg_struct));
-
 	struct ifreq if_idx;
+	struct arg_struct *args = malloc(sizeof(struct arg_struct));
 
 	if(argc == 1){
 
@@ -414,7 +431,7 @@ int main(int argc, char **argv){
 
 			close(args -> sr);
 		}
-
+		
 		/* Parse range of ip (flag -a)*/
 		char *ins = strtok(ip, ".");
 			
