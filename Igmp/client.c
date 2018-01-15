@@ -280,10 +280,8 @@ int listener(int ss, int sr){
 								if(timer[j] == i){
 								igmpv2_report(ss, rngip[j], rngip[j]);
 							}							
-							
 						}
 					}
-
 
 						sleep(1);
 
@@ -351,7 +349,7 @@ int main(int argc, char **argv){
 	pthread_t threads;
 
 	char *ip = NULL;
-	
+
 	char *mip1 = NULL;
 	char *mip2 = NULL;
 	char *mip3 = NULL;

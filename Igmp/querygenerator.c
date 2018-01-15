@@ -73,6 +73,12 @@ int general( char *interface){
 	if((setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface))) < 0)
 		perror("setsockopt error");
 
+	if (s == -1)
+		perror("Failed to create raw socket");
+	
+	if((setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface))) < 0)
+		perror("setsockopt error");
+
 	/* Kernel provide Ethernet header for us */
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = inet_addr("224.0.0.1");

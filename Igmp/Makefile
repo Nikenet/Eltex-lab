@@ -3,7 +3,6 @@ CFLAGS=-g -c -Werror
 TARGET=querygenerator
 SECONDTARGET=client
 
-
 $(TARGET): $(TARGET).o $(SECONDTARGET).o
 		$(CC) $(TARGET).o -o $(TARGET)
 		$(CC) $(SECONDTARGET).o -o $(SECONDTARGET) -lpthread
