@@ -15,5 +15,5 @@ clean:
 		rm -rf $(TARGET)
 		rm -rf $(TARGET).o
 		rm -rf $(SECONDTARGET)
-		rm -rf $(SECONDTARGET).ols
+		rm -rf $(SECONDTARGET).o
 		
